@@ -1,4 +1,6 @@
 # Project-ACE
+The Android Casino project aims to deliver a dynamic and social multiplayer casino experience for users of legal gambling age. Players can place bets, interact with each other in game lobby chats, and enjoy popular casino games, such as Roulette, BlackJack, and Baccarat all from the convenience of their mobile device. Admins oversee user accounts, point balances, and chat moderation, ensuring a secure and enjoyable gaming environment. This project enhances the way users engage with casino games, fostering a sense of community and excitement in the palm of their hand. 
+
 ## Module 1: Live Chats
 - Purpose: This module is dedicated to the management of chat functionality within the application. It enables users to connect to chat rooms for communication with other players while ensuring vigilant moderation to prevent inappropriate content and misuse.
 
