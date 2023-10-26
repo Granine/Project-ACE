@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.io Test</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+</head>
+<body>
+
+<script>
+    const socket = io.connect('http://localhost:8081');
+
+    socket.on('connect', () => {
+        console.log('Connected to the server');
+        //deleteAllusers first
+        /*
+        socket.emit('deleteAllUsers');
+        // Test create account
+        socket.emit('createAccount', {
+            userId: '1',
+            username: 'David',
+            balance: 100,
+            isAdmin: false,
+            isChatBanned: false,
+            lastRedemptionDate: '2023-10-22'
+        });
+
+        // Test retrieve account
+        socket.emit('retrieveAccount', '1');
+        
+        //Test update name
+        socket.emit('updateName','1','haoge');
+
+        //Test update isChatBanned
+        socket.emit('updateChatBanned', '1', true);
+        //Test update AdminStatus
+        socket.emit('updateAdminStatus', '1', true);
+
+        //Test update last redemption Date
+        socket.emit('updateLastRedemptionDate', '1', '2023-10-23');
+        // Test deposit
+        socket.emit('deposit', '1', 50);
+
+        // Test withdraw
+        socket.emit('withdraw', '1', 50);
+        
+        //Test delete
+        socket.emit("deleteUser", '1');
+        */
+    
+    });
+
+    socket.on('userError', (msg) => {
+        console.error(msg);
+    });
+    socket.on('accountCreated', (data) => {
+        console.log('User Account Details:', data);
+    });
+
+    socket.on('accountUpdated', (data) => {
+        console.log('Account Updated:', data);
+    });
+
+    socket.on('balanceUpdate', (balance) => {
+        console.log('Balance Updated:', balance);
+    });
+
+    socket.on('userAccountDetails', (data) => {
+        console.log('Rertieved account:', data);
+    });
+
+    socket.on('allUsersDeleted', (data) => {
+        console.log('Succesfully deleted all users');
+    })
+
+    socket.on('userDeleted', (data) => {
+        console.log('Succesfully deleted user:', data);
+    })
+
+    socket.on('UserFound', (data)=> {
+        console.log('UserFound: ', data);
+    })
+
+
+
+</script>
+</body>
+</html>
