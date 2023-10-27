@@ -22,6 +22,10 @@ class UserStore {
     async getUser(userId) {
         return await this.usersCollection.findOne({ userId: userId });
     }
+
+    async getUserbyname(username){
+        return await this.usersCollection.findOne({ username : username});
+    }
     
     async addUser(userDoc) {
         // Check if username already exists

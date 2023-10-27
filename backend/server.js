@@ -40,12 +40,12 @@ io.on('connection', (socket) => {
         userAccount.updateName(socket, userId, newname);
     });
 
-    socket.on('updateAdminStatus', (userID, AdminStatus) => {
-        userAccount.updateAdminStatus(socket, userID, AdminStatus);
+    socket.on('updateAdminStatus', (username, AdminStatus) => {
+        userAccount.updateAdminStatus(socket, username, AdminStatus);
     });
 
-    socket.on('updateChatBanned', (userID, ChatBannedStatus) => {
-        userAccount.updateChatBanned(socket, userID, ChatBannedStatus);
+    socket.on('updateChatBanned', (username, ChatBannedStatus) => {
+        userAccount.updateChatBanned(socket, username, ChatBannedStatus);
     });
 
     socket.on('updateLastRedemptionDate', (userID, rDate) => {
@@ -55,6 +55,10 @@ io.on('connection', (socket) => {
     socket.on('deposit', (userId, amount) => {
         userAccount.deposit(socket, userId, amount);
     });
+
+    socket.on('depositbyname', (username, amount) =>{
+        userAccount.depositbyname(socket, username, amount);
+    })
 
     socket.on('withdraw', (userId, amount) => {
         userAccount.withdraw(socket, userId, amount);

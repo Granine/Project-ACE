@@ -7,11 +7,6 @@ class UserAccount {
 
     async retrieveAccount(socket, userId) {
         const user = await this.userStore.getUser(userId);
-        if (!user) {
-            socket.emit('userError', "User not found.");
-            return;
-        }
-
         socket.emit('userAccountDetails', user);
     }
 
@@ -28,10 +23,6 @@ class UserAccount {
 
     async createAccount(socket, userInfo) {
         const newUser = await this.userStore.addUser(userInfo);
-        if (!newUser) {
-            socket.emit('userError', "Create User Failed.");
-            return;
-        }
         socket.emit('accountCreated', newUser);
     }
 
@@ -56,15 +47,15 @@ class UserAccount {
 
 
     
-    async updateAdminStatus(socket, userId, isAdmin) {
-        const user = await this.userStore.getUser(userId);
+    async updateAdminStatus(socket, username, isAdmin) {
+        const user = await this.userStore.getUserbyname(username);
         if (!user) {
             socket.emit('userError', "User not found.");
             return;
         }
         
         user.isAdmin = isAdmin;
-        const updatedUser = await this.userStore.updateUser(userId, user);
+        const updatedUser = await this.userStore.updateUser(user.userId, user);
         
         if (!updatedUser) {
             socket.emit('userError', "Assign Admin Status failed.");
@@ -75,15 +66,15 @@ class UserAccount {
     }
 
         
-    async updateChatBanned(socket, userId, isChatBanned) {
-        const user = await this.userStore.getUser(userId);
+    async updateChatBanned(socket, username, isChatBanned) {
+        const user = await this.userStore.getUserbyname(username);
         if (!user) {
             socket.emit('userError', "User not found.");
             return;
         }
         
         user.isChatBanned = isChatBanned;
-        const updatedUser = await this.userStore.updateUser(userId, user);
+        const updatedUser = await this.userStore.updateUser(user.userId, user);
         
         if (!updatedUser) {
             socket.emit('userError', "Assign ChatBanned Status failed.");
@@ -114,7 +105,7 @@ class UserAccount {
     async deposit(socket, userId, amount) {
         const user = await this.userStore.getUser(userId);
         if (!user) {
-            socket.emit('userError', "User not found.");
+            socket.emit('balanceUpdate', null);
             return;
         }
         
@@ -122,7 +113,25 @@ class UserAccount {
         const updatedUser = await this.userStore.updateUser(userId, user);
         
         if (!updatedUser) {
-            socket.emit('userError', "Deposit failed.");
+            socket.emit('balanceUpdate', null);
+            return;
+        }
+        
+        socket.emit('balanceUpdate', updatedUser.balance);
+    }
+
+    async depositbyname(socket, username, amount){
+        const user = await this.userStore.getUserbyname(username);
+        if (!user) {
+            socket.emit('balanceUpdate', null);
+            return;
+        }
+        
+        user.balance += amount;
+        const updatedUser = await this.userStore.updateUser(user.userId, user);
+        
+        if (!updatedUser) {
+            socket.emit('balanceUpdate', null);
             return;
         }
         
