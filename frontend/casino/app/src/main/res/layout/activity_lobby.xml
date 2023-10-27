@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Header with Leave Lobby Button -->
+    <Button
+        android:id="@+id/btnLeaveLobby"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Leave Lobby" />
+
+    <!-- Lobby Details -->
+    <TextView
+        android:id="@+id/tvLobbyName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Lobby Name: Lobby19" />
+
+    <TextView
+        android:id="@+id/tvGameType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Game Type: Roulette" />
+
+    <TextView
+        android:id="@+id/tvPlayersReady"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Players Ready: 3/5" />
+
+    <!-- Input for placing bets -->
+    <EditText
+        android:id="@+id/etPlaceBet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Place Bets" />
+
+    <!-- Dynamic section for placing bets -->
+    <TextView
+        android:id="@+id/tvPlaceBets"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="" />
+
+    <Button
+        android:id="@+id/btnPlaceBetsReadyUp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Place Bets and Ready Up" />
+
+    <!-- Chat Section -->
+    <TextView
+        android:id="@+id/tvLobbyChat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/llChatContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <!-- Dynamically add TextViews here for chat messages -->
+        </LinearLayout>
+
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/etEnterMessage"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:hint="Enter Message" />
+
+        <Button
+            android:id="@+id/btnSend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Send" />
+    </LinearLayout>
+</LinearLayout>

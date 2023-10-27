@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.io Test</title>
+    <script src="https://cdn.socket.io/4.4.0/socket.io.min.js"></script>
+</head>
+<body>
+    <h2>Chat</h2>
+    <div id="chatMessages" style="border: 1px solid black; height: 300px; overflow-y: scroll; padding: 10px;"></div>
+    <input id="messageInput" type="text" placeholder="Type a message...">
+    <button onclick="sendChatMessage()">Send</button>
+    
+    <script>
+        var socket = io('http://localhost:3000');
+        var chatMessages = document.getElementById('chatMessages');
+        var messageInput = document.getElementById('messageInput');
+
+        socket.on('connect', function() {
+            console.log('Connected to the server.');
+        });
+
+        socket.on('roomAlreadyExist', function() {
+            console.log('Room already exist');
+        });
+
+        socket.on('roomDoesNot', function() {
+            console.log('Room does not exist');
+        });
+
+        socket.on('PlayerExceedMax', function() {
+            console.log('Players Exceed Max');
+        });
+
+        socket.on('newPlayer', function(userName) {
+            console.log('A new player has joined:', userName);
+        });
+
+        socket.on('playerLeft', function(userName) {
+            console.log('A player has left:', userName);
+        });
+
+        socket.on('playerReady', function(userName) {
+            console.log('A player is ready:', userName);
+        });
+
+        socket.on('gameStarted', function() {
+            console.log('The game has started.');
+        });
+
+        socket.on('receiveChatMessage', function(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.innerText = `${message.user}: ${message.text}`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            console.log("Receive chat");
+        });
+
+        function sendChatMessage() {
+            const messageText = messageInput.value;
+            if (messageText.trim()) {
+                socket.emit('sendChatMessage', messageText);
+                console.log("Send chat Message");
+                // Clear the input after sending.
+                messageInput.value = '';
+            }
+        }
+    </script>
+</body>
+</html>
