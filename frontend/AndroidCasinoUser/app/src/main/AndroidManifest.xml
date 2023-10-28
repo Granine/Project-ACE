@@ -16,6 +16,9 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".CreateLobby"
+            android:exported="false" />
+        <activity
             android:name=".Lounge"
             android:exported="false" />
         <activity
@@ -27,9 +30,12 @@
         <activity
             android:name=".CreateAccount"
             android:exported="false" />
-
-        <service android:name=".SocketService" />
-
+        <activity
+            android:name=".LobbyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LobbyListActivity"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

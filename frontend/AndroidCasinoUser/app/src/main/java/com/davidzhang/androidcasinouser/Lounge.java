@@ -18,17 +18,20 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
-import java.net.Socket;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
 
 public class Lounge extends AppCompatActivity {
 
     private Button userProfileButton;
     private Button navigateToListButton;
-    private String userId;
     private String username;
     private Button signOutButton;
-
-    private String balance;
+    private Button createLobbyButton;
+    private Socket mSocket;
     private User user;
 
     private String TAG= "Lounge";
@@ -48,14 +51,13 @@ public class Lounge extends AppCompatActivity {
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         Intent intent = getIntent();
-        user = getIntent().getParcelableExtra("user");
-        userId = user.getUserId();
+        user = intent.getParcelableExtra("user");
+
         username = user.getUsername();
 
         userProfileButton = findViewById(R.id.userProfileButton);
         navigateToListButton = findViewById(R.id.navigateToLobbiesButton);
-
-
+        createLobbyButton = findViewById(R.id.createLobby);
         // Set the user name to the button
         userProfileButton.setText("Username: " + username); // Replace 'YourUserName' with the actual user name
         userProfileButton.setOnClickListener(new View.OnClickListener() {
@@ -81,8 +83,18 @@ public class Lounge extends AppCompatActivity {
         navigateToListButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Intent intent = new Intent(Lounge.this, LobbyListActivity.class);
-                //startActivity(intent);
+                Intent intent = new Intent(Lounge.this, LobbyListActivity.class);
+                intent.putExtra("user", user);
+                startActivity(intent);
+            }
+        });
+
+        createLobbyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Lounge.this, CreateLobby.class);
+                intent.putExtra("user", user);
+                startActivity(intent);
             }
         });
     }
@@ -99,5 +111,69 @@ public class Lounge extends AppCompatActivity {
         Intent intent = new Intent(Lounge.this, MainActivity.class);
         startActivity(intent);
 
+    }
+
+    private void setupSocketListeners() {
+        // Example: Listen for a chat message from the server
+        mSocket.on("userAccountDetails", new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                // Handle the chat message here
+                Log.d(TAG, "received user details");
+                if (args[0] != null) {
+                    // User found in the database
+                    JSONObject result = (JSONObject) args[0];
+                    Log.d(TAG, "User Found: " + user.toString());
+                    try {
+
+                        user.setId(result.getString("_id"));
+                        user.setUserId(result.getString("userId"));
+                        user.setUsername(result.getString("username"));
+                        user.setBalance(result.getInt("balance"));
+                        user.setAdmin(result.getBoolean("isAdmin"));
+                        user.setChatBanned(result.getBoolean("isChatBanned"));
+                        user.setLastRedemptionDate(result.getString("lastRedemptionDate"));
+
+
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    // You can now do further operations, for example, navigate to another activity
+                } else {
+                    // User not found in the database
+                    Log.d(TAG, "User not Found");
+                }
+            }
+        });
+        mSocket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                Log.d(TAG, "Socket connected");
+            }
+        });
+        mSocket.on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                Log.d(TAG, "Socket disconnected");
+            }
+        });
+        mSocket.on(Socket.EVENT_CONNECT_ERROR, new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                Log.e(TAG, "Socket connection error");
+            }
+        });
+
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Your code here
+       mSocket = SocketHandler.getSocket();
+       setupSocketListeners();
+       mSocket.emit("retrieveAccount", user.getUserId());
     }
 }

@@ -37,12 +37,12 @@ class GameLobby {
 
             this.liveChat.registerSocketEvents(socket, this.roomName, userName);
 
+            socket.join(this.roomName);
+
             await this.gameLobbyStore.updateLobby(this.roomName, { players: this.players });
-            return true;
         }
         else {
             socket.emit('PlayerExceedMax', "PlayerExceedMax");
-            return false;
         }
     }
 
@@ -111,8 +111,6 @@ class GameLobby {
             console.log("User ready");
             await this.setPlayerReady(userName);
         });
-
-        socket.join(this.roomName);
     }
 }
 

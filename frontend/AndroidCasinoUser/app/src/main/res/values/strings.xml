@@ -2,4 +2,9 @@
     <string name="app_name">AndroidCasinoUser</string>
     <string name="accountNameEditText">Enter your Username</string>
     <string name="DefaultAdminID">112203017909277811208</string>
+    <string-array name="game_types">
+        <item>Roulette</item>
+        <item>BlackJack</item>
+        <item>Baccarat</item>
+    </string-array>
 </resources>

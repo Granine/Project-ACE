@@ -96,11 +96,7 @@ io.on('connection', (socket) => {
             const lobby = new GameLobby(roomName, gameType, maxPlayers, null, gameLobbyStore, io);
             await lobby.init(roomName, gameType, maxPlayers);
             gameLobbies[roomName] = lobby;
-            // Set bet = 0 initially
-            var success = await gameLobbies[roomName].addPlayer(userName, 0, socket);
-            if(success === true) {
-                gameLobbies[roomName].registerSocketEvents(socket);
-            }
+            socket.emit('lobbyCreated', "Lobby Successfully Created");
         }
         else {
             socket.emit('roomAlreadyExist', "Room already exist");
@@ -112,10 +108,8 @@ io.on('connection', (socket) => {
         console.log("User joined");
         if(gameLobbies[roomName]) {
             // Set bet = 0 initially
-            var success = await gameLobbies[roomName].addPlayer(userName, 0, socket);
-            if(success === true) {
-                gameLobbies[roomName].registerSocketEvents(socket);
-            }
+            await gameLobbies[roomName].addPlayer(userName, 0, socket);
+            gameLobbies[roomName].registerSocketEvents(socket);
         }
         else {
             socket.emit('roomDoesNot', "Room does not exist");
