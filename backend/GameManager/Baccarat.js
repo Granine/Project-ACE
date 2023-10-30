@@ -180,16 +180,16 @@ class Baccarat {
         // prepare returning object
         let gameResult = {}
         for (let i = 0; i < gameDataLocal.playerList.length; i++) {
-            gameResult[gameDataLocal.playerList[j]] = "";
+            gameResult[gameDataLocal.playerList[i]] = "";
         }
         // get bets placed by each player
         for (let i = 0; i < gameDataLocal.playerList.length; i++) {
-            let playerIdValue = gameDataLocal.playerList[i].playerId;
+            let playerIdValue = gameDataLocal.playerList[i];
             let playerBets = gameDataLocal.betsPlaced[playerIdValue];
             let winningAmount = 0;
             // for each bet placed by player, calculate each winning amount, ignore no win
             for (let j = 0; j < playerBets.length; j++) {
-                let betType = playerBets[j].betOneWhat;
+                let betType = playerBets[j].betOnWhat;
                 let betValue = playerBets[j].amount;
                 
                 winningAmount += this._didBetWin(betType, handValue, betValue);

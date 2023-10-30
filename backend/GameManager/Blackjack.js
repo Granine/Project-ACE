@@ -140,9 +140,9 @@ class Blackjack {
         } else {
             // for each player in action list, check if their status is 1 (made action)
             for (let playerId of gameDataLocal.playerList) {
-                if (action.playerId[0] === 1) {
+                if (action[playerId][0] === 1) {
                     // if they hit
-                    if (action.playerId[1] === "hit") {
+                    if (action[playerId][1] === "hit") {
                         playerHand = gameDataLocal.gameItems.playerItems[playerId].playerHand
                         playerHand.append(this._getRandomCard(gameDataLocal));
                         handValue = this._getHandValue(gameDataLocal);
@@ -150,7 +150,7 @@ class Blackjack {
                         if (handValue[playerId] > 21) {
                             gameDataLocal.gameItems.playerItems[playerId].playerState = 1;
                         }
-                    } else if (action.playerId[1] === "stand") {
+                    } else if (action[playerId][1] === "stand") {
                         gameDataLocal.gameItems.playerItems[playerId].playerState = 1;
                     }
                 }
@@ -182,16 +182,16 @@ class Blackjack {
         // prepare returning object
         let gameResult = {}
         for (let i = 0; i < gameDataLocal.playerList.length; i++) {
-            gameResult[gameDataLocal.playerList[j]] = "";
+            gameResult[gameDataLocal.playerList[i]] = "";
         }
         // get bets placed by each player
         for (let i = 0; i < gameDataLocal.playerList.length; i++) {
-            let playerIdValue = gameDataLocal.playerList[i].playerId;
+            let playerIdValue = gameDataLocal.playerList[i];
             let playerBets = gameDataLocal.betsPlaced[playerIdValue];
             let winningAmount = 0;
             // for each bet placed by player, calculate each winning amount, ignore no win
             for (let j = 0; j < playerBets.length; j++) {
-                let betType = playerBets[j].betOneWhat;
+                let betType = playerBets[j].betOnWhat;
                 let betValue = playerBets[j].amount;
                 
                 winningAmount += this._didBetWin(betType, handValue, betValue);

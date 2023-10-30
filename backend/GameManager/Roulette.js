@@ -77,23 +77,23 @@ class Roulette{
             return 0;
         }
         let gameDataLocal = JSON.parse(JSON.stringify(gameData))
+        console.log("rouletteTable: " + gameDataLocal.gameItems.globalItems.rouletteTable);
         let rouletteNumber = gameDataLocal.gameItems.globalItems.ballLocation;
         let landColour = gameDataLocal.gameItems.globalItems.rouletteTable[rouletteNumber];
         // prepare returning object
         let gameResult = {}
         for (let i = 0; i < gameDataLocal.playerList.length; i++) {
-            gameResult[gameDataLocal.playerList[j]] = "";
+            gameResult[gameDataLocal.playerList[i]] = "";
         }
         // get bets placed by each player
         for (let i = 0; i < gameDataLocal.playerList.length; i++) {
-            let playerIdValue = gameDataLocal.playerList[i].playerId;
+            let playerIdValue = gameDataLocal.playerList[i];
             let playerBets = gameDataLocal.betsPlaced[playerIdValue];
             let winningAmount = 0;
             // for each bet placed by player, calculate each winning amount, ignore no win
             for (let j = 0; j < playerBets.length; j++) {
-                let betType = playerBets[j].betOneWhat;
-                let betValue = playerBets[j].amount;
-                
+                let betType = playerBets[j].betOnWhat;
+                let betValue = playerBets[j].amount
                 winningAmount += this._didBetWin(betType, rouletteNumber, landColour, betValue);
             }
             gameResult[playerIdValue] = winningAmount;

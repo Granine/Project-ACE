@@ -25,7 +25,7 @@ playerAction structure:
 
 /* betsPlaced, duplicate bet is allowed, ie betting two roulette numbers
 {
-    playerId: [{betOnWhat (str), amount (float)}]
+    playerId: [{betOnWhat: val (str), amount: amount (float)}]
 }
 */
 
@@ -96,7 +96,7 @@ class GameManager extends EventEmitter {
     _resetTimer(gameData) {
         // reset the timer, if one exists
         if (this.timers[gameData.lobbyName]) {
-            clearTimeout(this.timers[gameData.lobbyName].clearTimeout());
+            clearTimeout(this.timers[gameData.lobbyName]);
         }
 
         let defaultAction = this._getDefaultAction(gameData);
@@ -127,7 +127,17 @@ class GameManager extends EventEmitter {
         return gameData;
     }
 
+    /* based on game status, calculate the winning and modify gameData
+    *   @param {dictionary} gameData
+        @modify {dictionary} gameData
+    * @return {dictionary} gameResult
+    *   return 0 on error, like if game not over
+    */
     _calculateWinning(gameData) {
+        if (gameData.currentPlayerIndex !== -1) {
+            return 0;
+        }
+        let gameType = gameData.gameType;
         if (gameType == 'blackjack') {
             gameData = Blackjack.calculateWinning(gameData);
         }
@@ -225,17 +235,17 @@ class GameManager extends EventEmitter {
     */
     async playTurn(lobbyId, action) {
         let gameData = await this.gameStore.getGame(lobbyId);
-        console.log(gameData);
+        let gameResult = {};
         // reset the timer, if one exists
         this._resetTimer(gameData);
         // get action
         gameData = this._getActionResult(gameData, action);
         // update the game data in the database
         this.gameStore.updateGame(gameData);
-        console.log(gameData);
         // Notify all players whose turn it is
         if (this._checkGameOver(gameData)) {
-            gameResult = this.calculateWinning(gameData);
+            console.log("rouletteTable: " + gameData.gameItems.globalItems.rouletteTable);
+            gameResult = this._calculateWinning(gameData);
             // game is over
             this.io.to(gameData.lobbyId).emit('gameOver', {
                 "gameData": gameData, 
