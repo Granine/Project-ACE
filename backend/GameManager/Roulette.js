@@ -109,7 +109,7 @@ class Roulette{
     @return {int} winningAmount: the amount of money the player wins
     */
     static _didBetWin(betType, rouletteNumber, landColour, betValue){
-        let winningAmount = 0;
+        let winningAmount = -betValue;
         if(betType === 'red' || betType === 'black'){
             if(landColour == betType){
                 winningAmount += betValue * 2; //Red/Black bet pays 1:1
