@@ -16,6 +16,15 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".BlackJackActivity"
+            android:exported="false" />
+        <activity
+            android:name=".BaccaratActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RouletteActivity"
+            android:exported="false" />
+        <activity
             android:name=".CreateLobby"
             android:exported="false" />
         <activity

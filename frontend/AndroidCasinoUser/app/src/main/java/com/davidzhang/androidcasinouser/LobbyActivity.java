@@ -1,5 +1,6 @@
 package com.davidzhang.androidcasinouser;
 
+import android.app.GameState;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -123,6 +124,41 @@ public class LobbyActivity extends AppCompatActivity {
             }
         });
 
+
+        mSocket.on("gameStarted", new Emitter.Listener() {
+           @Override
+           public void call(Object... args) {
+               if (args[0] != null) {
+                   JSONObject gameState = (JSONObject) args[0];
+                   Log.d(TAG, "New Game Signal: " + gameState.toString());
+
+                   String gameType = "";
+                   try {
+                       gameType = gameState.getString("gameType");
+                   } catch (Exception e) {
+                       e.printStackTrace();
+                   }
+
+                   Intent gameIntent = null;
+                   if (gameType == "roulette") {
+                       gameIntent = new Intent(LobbyActivity.this, RouletteActivity.class);
+                   } else if (gameType == "baccarat") {
+                       gameIntent = new Intent(LobbyActivity.this, BaccaratActivity.class);
+                   } else if (gameType == "blackjack") {
+                       gameIntent = new Intent(LobbyActivity.this, BlackJackActivity.class);
+                   } else {
+                       Log.e(TAG, "No matching game type to: " + gameType);
+                       return;
+                   }
+                   gameIntent.putExtra("userName", currentPlayer.getUsername());
+                   gameIntent.putExtra("roomName", roomName);
+                   startActivity(gameIntent);
+               } else {
+                   Log.e(TAG, "No data sent in gameStarted signal.");
+               }
+           }
+        });
+
         // Button: Send for Chat
         Button btnSend = findViewById(R.id.btnSend);
         final EditText etEnterMessage = findViewById(R.id.etEnterMessage);
@@ -136,6 +172,14 @@ public class LobbyActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        //TODO do whatever we may need here get the lobby ready again (Eg resetting users to unready if necessary)
+        counter = 0;
     }
 
     // Add a chat message to the chat UI
