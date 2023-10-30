@@ -195,13 +195,13 @@ class GameManager extends EventEmitter {
         }
         // complete game creation, will prepare the game settings, but no action will be performed
         this.gameStore.newGame(gameData);
-        this.io.to(gameData.lobbyId).emit('gameStarted', {"gameData": gameData});
+        this._delay(1000);
+        this.io.to(gameData.lobbyId).emit('gameStarted', {});
         
         let defaultAction = this._getDefaultAction(gameData);
         // play first step of the game, often setup the game for first action
         this._getActionResult(gameData, defaultAction);
 
-        this.io.to(gameData.lobbyId).emit('playerTurn', {"gameData": gameData});
         this.gameStore.updateGame(gameData);
         this._resetTimer(gameData);
     }
@@ -213,7 +213,7 @@ class GameManager extends EventEmitter {
     *   @emit {dictionary} action back to caller
     */
     async _timeoutTurn(gameData, action) {
-        this.io.to(gameData.lobbyId).emit("gameManager/timeOut", {"playerAction": action});
+        this.io.to(gameData.lobbyId).emit("timeout", {"playerAction": action});
         this.playTurn(gameData, action);
     }
 
@@ -260,6 +260,10 @@ class GameManager extends EventEmitter {
     _checkGameOver(gameData) {
         // if there is no more player index, game is over
         return gameData.currentPlayerIndex == -1;
+    }
+    
+    _delay(duration) {
+        return new Promise(resolve => setTimeout(resolve, duration));
     }
 }
 
