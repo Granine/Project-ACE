@@ -127,35 +127,24 @@ public class LobbyActivity extends AppCompatActivity {
 
         mSocket.on("gameStarted", new Emitter.Listener() {
            @Override
+           //ChatGPT usage: No
            public void call(Object... args) {
-               if (args[0] != null) {
-                   JSONObject gameState = (JSONObject) args[0];
-                   Log.d(TAG, "New Game Signal: " + gameState.toString());
+               Log.d(TAG, "New Game Signal: " + gameType);
 
-                   String gameType = "";
-                   try {
-                       gameType = gameState.getString("gameType");
-                   } catch (Exception e) {
-                       e.printStackTrace();
-                   }
-
-                   Intent gameIntent = null;
-                   if (gameType == "roulette") {
-                       gameIntent = new Intent(LobbyActivity.this, RouletteActivity.class);
-                   } else if (gameType == "baccarat") {
-                       gameIntent = new Intent(LobbyActivity.this, BaccaratActivity.class);
-                   } else if (gameType == "blackjack") {
-                       gameIntent = new Intent(LobbyActivity.this, BlackJackActivity.class);
-                   } else {
-                       Log.e(TAG, "No matching game type to: " + gameType);
-                       return;
-                   }
-                   gameIntent.putExtra("userName", currentPlayer.getUsername());
-                   gameIntent.putExtra("roomName", roomName);
-                   startActivity(gameIntent);
+               Intent gameIntent = null;
+               if (gameType == "roulette") {
+                   gameIntent = new Intent(LobbyActivity.this, RouletteActivity.class);
+               } else if (gameType == "baccarat") {
+                   gameIntent = new Intent(LobbyActivity.this, BaccaratActivity.class);
+               } else if (gameType == "blackjack") {
+                   gameIntent = new Intent(LobbyActivity.this, BlackJackActivity.class);
                } else {
-                   Log.e(TAG, "No data sent in gameStarted signal.");
+                   Log.e(TAG, "No matching game type to: " + gameType);
+                   return;
                }
+               gameIntent.putExtra("userName", currentPlayer.getUsername());
+               gameIntent.putExtra("roomName", roomName);
+               startActivity(gameIntent);
            }
         });
 

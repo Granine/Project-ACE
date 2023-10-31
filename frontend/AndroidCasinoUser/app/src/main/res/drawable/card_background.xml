@@ -1,0 +1,16 @@
+<!-- ChatGPT usage: Yes -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background Shape -->
+    <item android:id="@android:id/background">
+        <shape
+            android:shape="rectangle">
+            <solid android:color="#D3D3D3" /> <!-- Android's Light Gray Color -->
+            <corners android:radius="8dp" /> <!-- Rounded Corners (Adjust the radius as needed) -->
+            <stroke
+                android:width="2dp"> <!-- Border Width -->
+                android:color="#000000" /> <!-- Black Border Color -->
+            </stroke>
+        </shape>
+    </item>
+</layer-list>
+

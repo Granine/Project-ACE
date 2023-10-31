@@ -13,7 +13,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 
-//THIS CLASS WAS 90% chatGPT 3.5, 10% me making changes
+//ChatGPT usage: Yes
 public class CircularWheelView extends View {
     // Constants for the wheel
     private static final int NUM_SLOTS = 37;
@@ -77,20 +77,25 @@ public class CircularWheelView extends View {
 
     private AnimationCallback callback;
 
+    //ChatGPT usage: Yes
     public CircularWheelView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
     }
 
+    //ChatGPT usage: Yes
     public interface AnimationCallback {
         void onAnimationFinished();
     }
 
     // Setter method to set the callback
+    //ChatGPT usage: Yes
     public void setAnimationCallback(AnimationCallback callback) {
+
         this.callback = callback;
     }
 
+    //ChatGPT usage: Yes
     private void init() {
         paint = new Paint();
         paint.setAntiAlias(true);
@@ -109,6 +114,7 @@ public class CircularWheelView extends View {
         tickerBounds = new RectF();
     }
 
+    //ChatGPT usage: Yes
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -155,6 +161,7 @@ public class CircularWheelView extends View {
     }
 
 
+    //ChatGPT usage: Yes ... with some minor custom modifications to the degree logic.
     public void spin(final int target) {
         if (!spinning) {
             final float numSpins = 2.74f;

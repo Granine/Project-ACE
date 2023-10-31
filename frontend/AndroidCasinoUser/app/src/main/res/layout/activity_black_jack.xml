@@ -4,6 +4,278 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".BlackJackActivity">
+    tools:context=".MainActivity">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Lobby Details -->
+        <TextView
+            android:id="@+id/lobbyNameLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lobby Name:" />
+
+        <TextView
+            android:id="@+id/gameTypeLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Game Type: BlackJack" />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/dealerCardsLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_row="0"
+                android:layout_column="0"
+                android:text="Dealer Cards: " />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/dealer_card_1"
+                    android:layout_width="70dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/card_background"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:text="\n" />
+
+                <TextView
+                    android:id="@+id/dealer_card_2"
+                    android:layout_width="70dp"
+                    android:layout_weight="1"
+                    android:layout_height="100dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:text="\n"
+                    android:background="@drawable/card_background" />
+
+                <TextView
+                    android:id="@+id/dealer_card_3"
+                    android:layout_width="70dp"
+                    android:layout_weight="1"
+                    android:layout_height="100dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:text="\n"
+                    android:background="@drawable/card_background" />
+
+                <TextView
+                    android:id="@+id/dealer_card_4"
+                    android:layout_width="70dp"
+                    android:layout_weight="1"
+                    android:layout_height="100dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:text="\n"
+                    android:background="@drawable/card_background" />
+
+                <TextView
+                    android:id="@+id/dealer_card_5"
+                    android:layout_width="70dp"
+                    android:layout_weight="1"
+                    android:layout_height="100dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:text="\n"
+                    android:background="@drawable/card_background" />
+
+                <TextView
+                    android:id="@+id/dealer_card_6"
+                    android:layout_width="70dp"
+                    android:layout_weight="1"
+                    android:layout_height="100dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:text="\n"
+                    android:background="@drawable/card_background" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/dealerScoreLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dealer Score:" />
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/hitButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hit" />
+
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/turnLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Dealing Cards..." />
+
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <Button
+                    android:id="@+id/standButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Stand" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/playerCardsLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_row="0"
+                android:layout_column="0"
+                android:text="Your Cards: " />
+
+            <LinearLayout
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/player_card_1"
+                    android:layout_width="70dp"
+                    android:layout_weight="1"
+                    android:layout_height="100dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:text="\n"
+                    android:background="@drawable/card_background" />
+
+                <TextView
+                    android:id="@+id/player_card_2"
+                    android:layout_width="70dp"
+                    android:layout_weight="1"
+                    android:layout_height="100dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:text="\n"
+                    android:background="@drawable/card_background" />
+
+                <TextView
+                    android:id="@+id/player_card_3"
+                    android:layout_width="70dp"
+                    android:layout_weight="1"
+                    android:layout_height="100dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:text="\n"
+                    android:background="@drawable/card_background" />
+
+                <TextView
+                    android:id="@+id/player_card_4"
+                    android:layout_width="70dp"
+                    android:layout_weight="1"
+                    android:layout_height="100dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:text="\n"
+                    android:background="@drawable/card_background" />
+
+                <TextView
+                    android:id="@+id/player_card_5"
+                    android:layout_width="70dp"
+                    android:layout_weight="1"
+                    android:layout_height="100dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:text="\n"
+                    android:background="@drawable/card_background" />
+
+                <TextView
+                    android:id="@+id/player_card_6"
+                    android:layout_width="70dp"
+                    android:layout_weight="1"
+                    android:layout_height="100dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:text="\n"
+                    android:background="@drawable/card_background" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/playerScoreLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Your Score:" />
+
+        </LinearLayout>
+
+
+        <!-- Chat Section -->
+        <TextView
+            android:id="@+id/tvLobbyChat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/llChatContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <!-- Dynamically add TextViews here for chat messages -->
+            </LinearLayout>
+        </ScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/etEnterMessage"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:hint="Enter Message" />
+
+            <Button
+                android:id="@+id/btnSend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Send" />
+        </LinearLayout>
+    </LinearLayout>
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

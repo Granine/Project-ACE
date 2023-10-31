@@ -30,6 +30,7 @@ import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
+//ChatGPT usage for this class: Partial - for things related to the wheelView and queueing requests and the popup window, and socket handling
 public class RouletteActivity extends AppCompatActivity {
 
     private Socket mSocket;
@@ -41,6 +42,7 @@ public class RouletteActivity extends AppCompatActivity {
 
 
     @Override
+    //ChatGPT usage: Partial - for things related to the wheelView and queueing requests and socket handling
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_roulette);
@@ -52,6 +54,7 @@ public class RouletteActivity extends AppCompatActivity {
         // Create an instance of AnimationCallback
         CircularWheelView.AnimationCallback animationCallback = new CircularWheelView.AnimationCallback() {
             @Override
+            //ChatGPT usage: Yes
             public void onAnimationFinished() {
                 currentlyAnimating = false;
                 runNextFunction();
@@ -65,11 +68,12 @@ public class RouletteActivity extends AppCompatActivity {
         String userName = intent.getStringExtra("userName");
         String roomName = intent.getStringExtra("roomName");
 
-        TextView tvLobbyName = findViewById(R.id.tvLobbyName);
+        TextView tvLobbyName = findViewById(R.id.lobbyNameLabel);
         tvLobbyName.setText("Lobby Name: " + roomName);
 
         mSocket.on("receiveChatMessage", new Emitter.Listener() {
             @Override
+            //TODO: ChatGPT usage: ASK DINGWEN AND DAVIDZ
             public void call(Object... args) {
                 JSONObject data = (JSONObject) args[0];
                 Log.e(TAG, data.toString());
@@ -87,6 +91,7 @@ public class RouletteActivity extends AppCompatActivity {
 
                 runOnUiThread(new Runnable() {
                     @Override
+                    //TODO: ChatGPT usage: ASK DINGWEN AND DAVIDZ
                     public void run() {
                         addChatMessage(message);
                     }
@@ -95,19 +100,22 @@ public class RouletteActivity extends AppCompatActivity {
         });
 
 
+        //TODO: MAKE SURE THIS ALIGNS WITH GUAN'S BACKEND
         mSocket.on("rouletteResult", new Emitter.Listener() {
             @Override
+            //ChatGPT usage: Partial - for things related to the wheelView and queueing requests
             public void call(Object... args) {
                 if (args[0] != null) {
                     requestQueue.offer(new Runnable() {
                         @Override
+                        //ChatGPT usage: Partial - the call to wheelView.spin
                         public void run() {
                             currentlyAnimating = true;
 
                             JSONObject gameResult = (JSONObject) args[0];
-
                             Log.d(TAG, "Roulette Result: " + gameResult.toString());
 
+                            //TODO MAKE SURE THIS WORKS WITH GUAN'S BACKEND - WILL NEED CHANGES
                             int tableValue = 0;
                             try {
                                 tableValue = gameResult.getInt("result");
@@ -130,16 +138,19 @@ public class RouletteActivity extends AppCompatActivity {
         });
 
 
+        //TODO MAKE SURE THIS ALIGNS WITH GUAN'S BACKEND
         mSocket.on("gameEnded", new Emitter.Listener() {
             @Override
+            //ChatGPT usage: Partial - for things related to to the popup window and queueing requests
             public void call(Object... args) {
                 if (args[0] != null) {
                     JSONObject results = (JSONObject) args[0];
                     Log.d(TAG, "Game Results: " + results.toString());
                     requestQueue.offer(new Runnable() {
                         @Override
+                        //ChatGPT usage: Partial - The call to showWinningsPopup
                         public void run() {
-                            //TODO: Get results - fix this after I know how they are sent
+                            //TODO: MAKE SURE THIS WORKS WITH GUAN'S BACKEND - WILL NEED CHANGES
                             double earnings = 0;
                             try {
                                 earnings = results.getDouble(userName);
@@ -151,13 +162,13 @@ public class RouletteActivity extends AppCompatActivity {
                             double finalEarnings = earnings;
                             runOnUiThread(new Runnable() {
                                 @Override
+                                //ChatGPT usage: Partial - The call to showWinningsPopup
                                 public void run() {
                                     showWinningsPopup(finalEarnings);
                                 }
                             });
 
                             mSocket.emit("depositbyname", userName, finalEarnings);
-
                             //Return to the LobbyActivity
                             finish();
                         }
@@ -172,11 +183,13 @@ public class RouletteActivity extends AppCompatActivity {
             }
         });
 
+
         // Button: Send for Chat
         Button btnSend = findViewById(R.id.btnSend);
         final EditText etEnterMessage = findViewById(R.id.etEnterMessage);
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
+            //TODO: ChatGPT usage: ASK DAVIDZ/DINGWEN
             public void onClick(View view) {
                 String message = etEnterMessage.getText().toString();
                 if (!message.isEmpty()) {
@@ -188,6 +201,7 @@ public class RouletteActivity extends AppCompatActivity {
     }
 
     // Add a chat message to the chat UI
+    //TODO: ChatGPT usage: ASK DAVIDZ AND DINGWEN
     private void addChatMessage(String message) {
         LinearLayout llChatContainer = findViewById(R.id.llChatContainer);
         TextView tvMessage = new TextView(this);
@@ -196,6 +210,7 @@ public class RouletteActivity extends AppCompatActivity {
     }
 
 
+    //ChatGPT usage: Yes
     private void showWinningsPopup(double winningsValue) {
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.popup_layout, null);
@@ -221,12 +236,15 @@ public class RouletteActivity extends AppCompatActivity {
         // Dismiss the popup when the "OK" button is clicked
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override
+            //ChatGPT usage: Yes
             public void onClick(View v) {
+
                 popupWindow.dismiss();
             }
         });
     }
 
+    //ChatGPT usage: Yes
     private void runNextFunction() {
         if (!requestQueue.isEmpty()) {
             Runnable nextFunction = requestQueue.poll();

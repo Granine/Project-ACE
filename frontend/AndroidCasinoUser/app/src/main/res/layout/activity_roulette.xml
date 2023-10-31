@@ -17,13 +17,13 @@
 
         <!-- Lobby Details -->
         <TextView
-            android:id="@+id/tvLobbyName"
+            android:id="@+id/lobbyNameLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Lobby Name: Lobby19" />
+            android:text="Lobby Name:" />
 
         <TextView
-            android:id="@+id/tvGameType"
+            android:id="@+id/gameTypeLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Game Type: Roulette" />
@@ -31,7 +31,7 @@
         <FrameLayout
             android:id="@+id/squareContainer"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent">
 
