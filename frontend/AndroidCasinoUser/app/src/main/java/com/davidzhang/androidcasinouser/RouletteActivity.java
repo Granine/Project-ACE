@@ -1,8 +1,5 @@
 package com.davidzhang.androidcasinouser;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.app.GameState;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,17 +13,14 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
-import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.LinkedList;
 import java.util.Queue;
 
-import io.socket.client.Socket;
-import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
@@ -99,61 +93,42 @@ public class RouletteActivity extends AppCompatActivity {
             }
         });
 
-
-        //TODO: MAKE SURE THIS ALIGNS WITH GUAN'S BACKEND
-        mSocket.on("rouletteResult", new Emitter.Listener() {
+        mSocket.on("gameOver", new Emitter.Listener() {
             @Override
-            //ChatGPT usage: Partial - for things related to the wheelView and queueing requests
+            //ChatGPT usage: Partial - for things related to to the popup window and queueing requests
             public void call(Object... args) {
                 if (args[0] != null) {
+                    JSONObject gameResults = (JSONObject) args[0];
+                    Log.d(TAG, "Game Results: " + gameResults.toString());
+
                     requestQueue.offer(new Runnable() {
                         @Override
                         //ChatGPT usage: Partial - the call to wheelView.spin
                         public void run() {
                             currentlyAnimating = true;
-
-                            JSONObject gameResult = (JSONObject) args[0];
-                            Log.d(TAG, "Roulette Result: " + gameResult.toString());
-
-                            //TODO MAKE SURE THIS WORKS WITH GUAN'S BACKEND - WILL NEED CHANGES
-                            int tableValue = 0;
+                            int ballLocation = 0;
                             try {
-                                tableValue = gameResult.getInt("result");
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                return;
-                            }
+                                JSONObject gameData = gameResults.getJSONObject("gameData");
+                                JSONObject gameItems = gameData.getJSONObject("gameItems");
+                                JSONObject globalItems = gameItems.getJSONObject("globalItems");
 
-                            wheelView.spin(tableValue);
+                                ballLocation = globalItems.getInt("ballLocation");
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                            wheelView.spin(ballLocation);
                         }
                     });
-                    if (currentlyAnimating != true) {
-                        runNextFunction();
-                    }
-                }
-                else {
-                    Log.e(TAG, "No data sent in rouletteResult signal.");
-                }
-            }
-        });
+                    runNextFunction();
 
-
-        //TODO MAKE SURE THIS ALIGNS WITH GUAN'S BACKEND
-        mSocket.on("gameEnded", new Emitter.Listener() {
-            @Override
-            //ChatGPT usage: Partial - for things related to to the popup window and queueing requests
-            public void call(Object... args) {
-                if (args[0] != null) {
-                    JSONObject results = (JSONObject) args[0];
-                    Log.d(TAG, "Game Results: " + results.toString());
                     requestQueue.offer(new Runnable() {
                         @Override
                         //ChatGPT usage: Partial - The call to showWinningsPopup
                         public void run() {
-                            //TODO: MAKE SURE THIS WORKS WITH GUAN'S BACKEND - WILL NEED CHANGES
                             double earnings = 0;
                             try {
-                                earnings = results.getDouble(userName);
+                                JSONObject gameResult = gameResults.getJSONObject("gameResult");
+                                earnings = gameResult.getInt(userName);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }

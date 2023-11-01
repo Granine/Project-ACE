@@ -38,21 +38,22 @@ class Blackjack {
         for (let i = 0; i < gameDataLocal.playerList.length; i++) {
             gameDataLocal.gameItems.playerItems[gameDataLocal.playerList[i]] = {
                 playerHand: [],
-                playerState: 0, // 0 = still in game, 1 = hold before or >21
+                playerState: 0, // 0 = still in game, 1 = done their turns
             }
         }
         return gameDataLocal;
     }
 
+
     /* get a random card from the deck
     @param {json/object} gameData: the gameData object
     @return {str} card: the card generated, see getPokar() for values
     */
-
     static _getRandomCard(gameData) {
         //get a random card
         return gameData.gameItems.globalItems.pokar[Math.floor(Math.random() * 52)];
     }
+
 
     /* get the value of the hand
     @param {json/object} gameData: the gameData object
@@ -119,47 +120,56 @@ class Blackjack {
     @param {json} gameData: the gameData object
         return 0 on error
     */
-    static playTurn(gameData, action) {
+    static playTurn(gameData, username, action) {
         let gameDataLocal = JSON.parse(JSON.stringify(gameData))
         // check if more card should be given
         let handValue = this._getHandValue(gameDataLocal);
-        let gameOver = 0; // assume game over
-        let newAction = {}
         let playerHand = []
         let dealerHand = gameDataLocal.gameItems.globalItems.dealerHand
-        // if round 1
+        
+        // if first round, deal cards
         if (gameDataLocal.currentTurn === 0) {
+            gameDataLocal.currentTurn = 1;
+
             // deal cards to all player
             for (let playerId of gameDataLocal.playerList) {
-                playerHand = gameDataLocal.gameItems.playerItems[playerId].playerHand
+                playerHand = gameDataLocal.gameItems.playerItems[playerId].playerHand;
                 playerHand.append(this._getRandomCard(gameDataLocal));
                 playerHand.append(this._getRandomCard(gameDataLocal));
             }
             // deal cards to dealer
             dealerHand.append(this._getRandomCard(gameDataLocal));
+
         } else {
-            // for each player in action list, check if their status is 1 (made action)
-            for (let playerId of gameDataLocal.playerList) {
-                if (action[playerId][0] === 1) {
-                    // if they hit
-                    if (action[playerId][1] === "hit") {
-                        playerHand = gameDataLocal.gameItems.playerItems[playerId].playerHand
-                        playerHand.append(this._getRandomCard(gameDataLocal));
-                        handValue = this._getHandValue(gameDataLocal);
-                        // if >21, update player state to 1
-                        if (handValue[playerId] > 21) {
-                            gameDataLocal.gameItems.playerItems[playerId].playerState = 1;
-                        }
-                    } else if (action[playerId][1] === "stand") {
-                        gameDataLocal.gameItems.playerItems[playerId].playerState = 1;
-                    }
+
+            if (username !== gameDataLocal.playerList[gameDataLocal.currentPlayerIndex]) {
+                //Wrong player somehow made the request
+                return gameDataLocal;
+            }
+
+            if (action == "hit") {
+                playerHand = gameDataLocal.gameItems.playerItems[username].playerHand;
+                playerHand.append(this._getRandomCard(gameDataLocal));
+                handValue = this._getHandValue(gameDataLocal);
+
+                if (handValue[playerId] >= 21) {
+                    //Their turn is over
+                    gameDataLocal.gameItems.playerItems[playerId].playerState = 1;
+                    gameDataLocal.currentTurn = gameDataLocal.currentTurn + 1;
                 }
+            } else if (action == "stand") {
+                //Their turn is over
+                gameDataLocal.gameItems.playerItems[playerId].playerState = 1;
+                gameDataLocal.currentTurn = gameDataLocal.currentTurn + 1;
+            } else {
+                //bad action
+                return gameDataLocal;
             }
         }
+
         // get next player, and determine if game is over
-        gameDataLocal = this._getNextPlayer(gameDataLocal);
-        // update actions table accordingly
-        newAction = this._updatePlayerAction(gameDataLocal, action);
+        gameDataLocal = this._getNextPlayer(gameDataLocal);        
+
         // if user all made action, dealer will play
         if (gameDataLocal.currentPlayerIndex === -1){
             // dealer will play
@@ -173,10 +183,11 @@ class Blackjack {
     }
 
     static calculateWinning(gameData){
-        // check game is over
+        // ensure game is over
         if(gameData.currentPlayerIndex !== -1){
             return 0;
         }
+
         let gameDataLocal = JSON.parse(JSON.stringify(gameData))
         let handValue = this._getHandValue(gameDataLocal);
         // prepare returning object
@@ -228,20 +239,10 @@ class Blackjack {
     */
     static _getNextPlayer(gameData){
         let playerId = "";
-        let currentPlayerIndex = gameData.currentPlayerIndex;
         let playerCount = gameData.playerList.length;
         
-        // Check players starting from next index to end of list
-        for (let i = currentPlayerIndex + 1; i < playerCount; i++) {
-            playerId = gameData.playerList[i];
-            if (gameData.gameItems.playerItems[playerId].playerState === 0) {
-                gameData.currentPlayerIndex = i;
-                return gameData;
-            }
-        }
 
-        // If no player found, wrap back to start of list
-        for (let i = 0; i < currentPlayerIndex; i++) {
+        for (let i = 0; i < playerCount; i++) {
             playerId = gameData.playerList[i];
             if (gameData.gameItems.playerItems[playerId].playerState === 0) {
                 gameData.currentPlayerIndex = i;
@@ -252,48 +253,6 @@ class Blackjack {
         // If still no player found, set currentPlayerIndex to -1
         gameData.currentPlayerIndex = -1;
         return gameData;
-    }
-
-    /*
-    *update the player action, directly modify the gameData object
-    * 1. find the current player in action with status == 2, update it to 0
-    * 2. find the current player in action with status == 1, update it to 2
-    * 3. find the current player with currentPlayerIndex, update it to 1
-    *@param {json} gameData: the gameData object
-    *@param {json} action: the action object
-    *@modifies {json} gameData: the gameData object modified
-    *@return {json} gameData: the gameData object modified
-        return 0 on error
-    */
-    static _updatePlayerAction(gameData, action){
-        // check game not over 
-        
-        let playerId = "";
-        let currentPlayerIndex = gameData.currentPlayerIndex;
-        
-        // update last player to normal state
-        for (let playerId of Object.keys(action)) {
-            if (action[playerId][0] === 2) {
-                action[playerId][0] = 0;
-                break;
-            }
-        }
-        // update current player to last player
-        for (let playerId of Object.keys(action)) {
-            if (action[playerId][0] === 1) {
-                action[playerId][0] = 2;
-                break;
-            }
-        }
-        // if game is not over, assign next player to current player
-        if(gameData.currentPlayerIndex === -1){
-             // update current player status to 1
-            playerId = gameData.playerList[currentPlayerIndex];
-            action[playerId].playerState = 1;
-        }
-        
-       
-        return action;
     }
 }
 

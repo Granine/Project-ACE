@@ -168,7 +168,7 @@ public class LobbyActivity extends AppCompatActivity {
         super.onResume();
 
         //TODO do whatever we may need here get the lobby ready again (Eg resetting users to unready if necessary)
-        counter = 0;
+        //counter = 0;
     }
 
     // Add a chat message to the chat UI

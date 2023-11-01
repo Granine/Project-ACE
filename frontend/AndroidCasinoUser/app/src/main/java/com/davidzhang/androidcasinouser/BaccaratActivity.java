@@ -13,13 +13,18 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
@@ -32,20 +37,20 @@ public class BaccaratActivity extends AppCompatActivity {
     private TextView turnIndicator, playerScoreLabel, dealerScoreLabel, lobbyName;
     private int[] playerCardVals = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     private int[] dealerCardVals = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    private Map<String, Integer> cardValues = new HashMap<>() {{
-        put("ace", 1); //or 11
-        put("two", 2);
-        put("three", 3);
-        put("four", 4);
-        put("five", 5);
-        put("six", 6);
-        put("seven", 7);
-        put("eight", 8);
-        put("nine", 9);
-        put("ten", 0);
-        put("jack", 0);
-        put("queen", 0);
-        put("king", 0);
+    private Map<String, Integer> cardValues = new HashMap<String, Integer>() {{
+        put("Ace", 1); //or 11
+        put("2", 2);
+        put("3", 3);
+        put("4", 4);
+        put("5", 5);
+        put("6", 6);
+        put("7", 7);
+        put("8", 8);
+        put("9", 9);
+        put("10", 0);
+        put("Jack", 0);
+        put("Queen", 0);
+        put("King", 0);
     }};
     private TextView[] playerCardItems = new TextView[6];
     private TextView[] dealerCardItems = new TextView[6];
@@ -96,12 +101,14 @@ public class BaccaratActivity extends AppCompatActivity {
             }
         });
 
-        //TODO MAKE SURE THIS ALIGNS WITH GUAN'S BACKEND
-        mSocket.on("gameResults", new Emitter.Listener() {
+        mSocket.on("gameEnded", new Emitter.Listener() {
             @Override
-            //ChatGPT usage: partial - for things related to queueing requests.
+            //ChatGPT usage: Partial - for things related to to the popup window and queueing requests
             public void call(Object... args) {
                 if (args[0] != null) {
+                    JSONObject gameResults = (JSONObject) args[0];
+                    Log.d(TAG, "Game Results: " + gameResults.toString());
+
                     requestQueue.offer(new Runnable() {
                         @Override
                         //ChatGPT usage: No
@@ -109,51 +116,34 @@ public class BaccaratActivity extends AppCompatActivity {
                             new Thread(() -> {
                                 currentlyAnimating = true;
 
-                                JSONObject gameResult = (JSONObject) args[0];
-                                Log.d(TAG, "Baccarat Result: " + gameResult.toString());
 
-                                //TODO MAKE SURE THIS WORKS WITH GUAN'S BACKEND - WILL NEED CHANGES
-                                JSONArray tableCards;
-                                JSONArray dealerCards;
+                                JSONObject gameData = null;
+                                JSONObject gameItems = null;
+                                JSONObject globalItems = null;
+
+                                JSONArray playerHandJsonArray = null;
+                                JSONArray dealerHandJsonArray = null;
                                 try {
-                                    tableCards = gameResult.getJSONArray("PlayerCards");
-                                    dealerCards = gameResult.getJSONArray("DealerCards");
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                    return;
+                                    gameData = gameResults.getJSONObject("gameData");
+                                    gameItems = gameData.getJSONObject("gameItems");
+                                    globalItems = gameItems.getJSONObject("globalItems");
+
+                                    playerHandJsonArray = globalItems.getJSONArray("playerHand");
+                                    dealerHandJsonArray = globalItems.getJSONArray("bankerHand");
+                                }
+                                catch (JSONException e) {
+                                    throw new RuntimeException(e);
                                 }
 
-                                //TODO DEAL OUT CARDS: 1 TO PLAYER, 1 TO DEALER, 1 TO PLAYER, 1 TO DEALER, REST OF PLAYERS, REST OF DEALERS
-                                String val;
-                                String suit;
 
-                                /**
-                                 try {
-                                    val = tableCards[0].getString("value"); // fix this
-                                    suit = tableCards[0].getString("suit");
-                                 } catch (JSONException e) {
-                                    throw new RuntimeException(e);
-                                 }
-                                 dealNewPlayerCard(val, suit);
-                                 updateScores()
-                                 */
-
+                                String card;
                                 try {
-                                    Thread.sleep(500);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-
-                                /**
-                                 try {
-                                    val = dealerCards[0].getString("value"); // fix this
-                                    suit = dealerCards[0].getString("suit");
-                                 } catch (JSONException e) {
+                                    card = playerHandJsonArray.getString(0);
+                                } catch (JSONException e) {
                                     throw new RuntimeException(e);
-                                 }
-                                 dealNewDealerCard(val, suit);
-                                 updateScores()
-                                 */
+                                }
+                                dealNewPlayerCard(card);
+                                updateScores();
 
                                 try {
                                     Thread.sleep(500);
@@ -161,16 +151,15 @@ public class BaccaratActivity extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
 
-                                /**
-                                 try {
-                                    val = tableCards[1].getString("value"); // fix this
-                                    suit = tableCards[1].getString("suit");
-                                 } catch (JSONException e) {
+
+                                try {
+                                    card = dealerHandJsonArray.getString(0);
+                                } catch (JSONException e) {
                                     throw new RuntimeException(e);
-                                 }
-                                 dealNewPlayerCard(val, suit);
-                                 updateScores()
-                                 */
+                                }
+                                dealNewDealerCard(card);
+                                updateScores();
+
 
                                 try {
                                     Thread.sleep(500);
@@ -178,16 +167,27 @@ public class BaccaratActivity extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
 
-                                /**
-                                 try {
-                                    val = dealerCards[0].getString("value"); // fix this
-                                    suit = dealerCards[0].getString("suit");
-                                 } catch (JSONException e) {
+                                try {
+                                    card = playerHandJsonArray.getString(1);
+                                } catch (JSONException e) {
                                     throw new RuntimeException(e);
-                                 }
-                                 dealNewDealerCard(val, suit);
-                                 updateScores()
-                                 */
+                                }
+                                dealNewPlayerCard(card);
+                                updateScores();
+
+                                try {
+                                    Thread.sleep(500);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                                try {
+                                    card = dealerHandJsonArray.getString(0);
+                                } catch (JSONException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                dealNewDealerCard(card);
+                                updateScores();
 
                                 try {
                                     Thread.sleep(500);
@@ -196,41 +196,39 @@ public class BaccaratActivity extends AppCompatActivity {
                                 }
 
                                 //Deal remaining player cards
-                                /**
-                                 for (int i = playerCardIdx; i < 21; i++) {
+                                for (int i = playerCardIdx; i < 21; i++) {
                                     try {
-                                        val = tableCards[i].getString("value"); // fix this
-                                        suit = tableCards[i].getString("suit");
+                                        card = playerHandJsonArray.getString(i);
                                     } catch (JSONException e) {
                                         break;
                                     }
-                                    dealNewPlayerCard(val, suit);
-                                    updateScores()
+                                    dealNewPlayerCard(card);
+                                    updateScores();
+
                                     try {
                                         Thread.sleep(500);
                                     } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
-                                 }
+                                }
 
-                                 //Deal remaining dealer cards
+                                //Deal remaining dealer cards
 
-                                 for (int i = dealerCardIdx; i < 21; i++) {
+                                for (int i = dealerCardIdx; i < 21; i++) {
                                     try {
-                                        val = dealerCards[i].getString("value"); // fix this
-                                        suit = dealerCards[i].getString("suit");
+                                        card = dealerHandJsonArray.getString(1);
                                     } catch (JSONException e) {
                                         break;
                                     }
-                                    dealNewDealerCard(val, suit);
-                                    updateScores()
+                                    dealNewDealerCard(card);
+                                    updateScores();
+
                                     try {
                                         Thread.sleep(500);
                                     } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
-                                 }
-                                 */
+                                }
 
                                 //Some sleep time to ensure the popup window doesn't come too soon.
                                 try {
@@ -244,37 +242,19 @@ public class BaccaratActivity extends AppCompatActivity {
                             }).start();
                         }
                     });
-                    if (currentlyAnimating != true) {
-                        runNextFunction();
-                    }
-                }
-                else {
-                    Log.e(TAG, "No data sent in gameResults signal.");
-                }
-            }
-        });
+                    runNextFunction();
 
-
-        //TODO MAKE SURE THIS ALIGNS WITH GUAN'S BACKEND
-        mSocket.on("gameEnded", new Emitter.Listener() {
-            @Override
-            //ChatGPT usage: Partial - for things related to to the popup window and queueing requests
-            public void call(Object... args) {
-                if (args[0] != null) {
-                    JSONObject results = (JSONObject) args[0];
-                    Log.d(TAG, "Game Results: " + results.toString());
                     requestQueue.offer(new Runnable() {
                         @Override
                         //ChatGPT usage: Partial - The call to showWinningsPopup
                         public void run() {
-                            //TODO: MAKE SURE THIS WORKS WITH GUAN'S BACKEND - WILL NEED CHANGES
                             double earnings = 0;
                             try {
-                                earnings = results.getDouble(userName);
+                                JSONObject gameResult = gameResults.getJSONObject("gameResult");
+                                earnings = gameResult.getInt(userName);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-
 
                             //Send User to Results Popup
                             double finalEarnings = earnings;
@@ -368,7 +348,12 @@ public class BaccaratActivity extends AppCompatActivity {
     }
 
     //ChatGPT usage: No
-    private void dealNewDealerCard(String value, String suit) {
+    private void dealNewDealerCard(String card) {
+        String[] cardDetails = getCardDetails(card);
+
+        String value = cardDetails[0];
+        String suit = cardDetails[1];
+
         if (dealerCardIdx <= 5) {
             dealerCardItems[dealerCardIdx].setText(value+ "\n" + suit);
         } else {
@@ -379,7 +364,12 @@ public class BaccaratActivity extends AppCompatActivity {
     }
 
     //ChatGPT usage: No
-    private void dealNewPlayerCard(String value, String suit) {
+    private void dealNewPlayerCard(String card) {
+        String[] cardDetails = getCardDetails(card);
+
+        String value = cardDetails[0];
+        String suit = cardDetails[1];
+
         if (playerCardIdx <= 5) {
             playerCardItems[playerCardIdx].setText(value+ "\n" + suit);
         } else {
@@ -407,5 +397,46 @@ public class BaccaratActivity extends AppCompatActivity {
 
         dealerScoreLabel.setText(String.valueOf(dealerScore));
         playerScoreLabel.setText(String.valueOf(playerScore));
+    }
+
+    //ChatGPT usage: No
+    private String[] getCardDetails(String card) {
+        String val = "";
+        String valAbbrv = "";
+        String suitAbbrv = "";
+        String suit = "";
+
+        if (card.startsWith("10")) {
+            valAbbrv = "10";
+            suitAbbrv = String.valueOf(card.charAt(2));
+        } else {
+            valAbbrv = String.valueOf(card.charAt(0));
+            suitAbbrv = String.valueOf(card.charAt(1));
+        }
+
+        if (suitAbbrv == "H") {
+            suit = "Heart";
+        } else if (suitAbbrv == "D") {
+            suit = "Diamond";
+        } else if (suitAbbrv == "C") {
+            suit = "Club";
+        } else if (suitAbbrv == "S") {
+            suit = "Spade";
+        }
+
+        if (valAbbrv == "A") {
+            val = "Ace";
+        } else if (valAbbrv == "J") {
+            val = "Jack";
+        } else if (valAbbrv == "Q") {
+            val = "Queen";
+        } else if (valAbbrv == "K") {
+            val = "King";
+        } else {
+            val = valAbbrv;
+        }
+
+        String[] returnObj = {val, suit};
+        return returnObj;
     }
 }

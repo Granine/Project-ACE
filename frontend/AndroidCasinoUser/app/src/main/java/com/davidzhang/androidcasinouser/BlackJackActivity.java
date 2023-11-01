@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -28,7 +29,6 @@ public class BlackJackActivity extends AppCompatActivity {
 
     private Socket mSocket;
     private String TAG = "BlackJackEvent";
-
     private boolean currentlyAnimating = false;
 
     private final Queue<Runnable> requestQueue = new LinkedList<>();
@@ -110,8 +110,7 @@ public class BlackJackActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), "HIT", Toast.LENGTH_SHORT).show();
 
-                //TODO: MAKE SURE THIS WORKS WITH GUAN'S BACKEND
-                mSocket.emit("playTurn", "hit");
+                mSocket.emit("playTurn", lobbyName, userName, "hit");
             }
         });
 
@@ -121,8 +120,7 @@ public class BlackJackActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), "STAND", Toast.LENGTH_SHORT).show();
 
-                //TODO: MAKE SURE THIS WORKS WITH GUAN'S BACKEND
-                mSocket.emit("playTurn", lobbyName);
+                mSocket.emit("playTurn", lobbyName, userName, "stand");
             }
         });
 
@@ -155,8 +153,7 @@ public class BlackJackActivity extends AppCompatActivity {
         });
 
 
-        //TODO MAKE SURE THIS ALIGNS WITH GUAN'S BACKEND
-        mSocket.on("initGame", new Emitter.Listener() {
+        mSocket.on("playerTurn", new Emitter.Listener() {
             @Override
             //ChatGPT usage: partial - for things related to queueing requests.
             public void call(Object... args) {
@@ -171,258 +168,63 @@ public class BlackJackActivity extends AppCompatActivity {
                                 JSONObject gameState = (JSONObject) args[0];
                                 Log.d(TAG, "BlackJack Init: " + gameState.toString());
 
-                                //TODO MAKE SURE THIS WORKS WITH GUAN'S BACKEND - WILL NEED CHANGES WHEN I KNOW MORE
-                                JSONArray playerCards;
-                                JSONArray myCards;
-                                JSONArray dealerCards;
-                                /**
-                                 try {
-                                    playerCards = gameState.getJSONArray("PlayerCards");
-                                    myCards = playerCards.getJSONArray(userName);
-                                    dealerCards = gameState.getJSONArray("DealerCards");
-                                 } catch (Exception e) {
-                                    e.printStackTrace();
-                                    return;
-                                 }
-                                 */
+                                //Get Dealer and Player Cards, and Current Player
+                                JSONObject gameData = null;
+                                JSONObject gameItems = null;
+                                JSONObject globalItems = null;
+                                JSONObject playerItems = null;
+                                JSONObject currentUserData = null;
+                                JSONObject turnPlayerData = null;
 
-                                //TODO DEAL OUT CARDS: 1 TO ME, 1 TO DEALER, 1 TO ME, 1 UPSIDE DOWN DEALER CARD
-                                String val;
-                                String suit;
+                                JSONArray playerHandJsonArray = null;
+                                JSONArray dealerHandJsonArray = null;
+                                JSONArray turnPlayerHandJsonArray = null; //This one is for future updates to the UI
 
-                                /**
-                                 try {
-                                    val = myCards[0].getString("value"); // fix this
-                                    suit = myCards[0].getString("suit");
-                                 } catch (JSONException e) {
+                                JSONArray playerList = null;
+                                int currentPlayerIndex = -1;
+                                String turnPlayer = "";
+
+                                String card;
+
+                                try {
+                                    gameData = gameState.getJSONObject("gameData");
+                                    gameItems = gameData.getJSONObject("gameItems");
+                                    globalItems = gameItems.getJSONObject("globalItems");
+                                    playerItems = gameItems.getJSONObject("playerItems");
+
+                                    playerList = gameState.getJSONArray("playerList");
+                                    currentPlayerIndex = gameState.getInt("currentPlayerIndex");
+                                    turnPlayer = playerList.getString(currentPlayerIndex);
+
+                                    currentUserData = playerItems.getJSONObject(userName);
+                                    turnPlayerData = playerItems.getJSONObject(turnPlayer);
+
+                                    playerHandJsonArray = currentUserData.getJSONArray("playerHand");
+                                    turnPlayerHandJsonArray = turnPlayerData.getJSONArray("playerHand");
+                                    dealerHandJsonArray = globalItems.getJSONArray("dealerHand");
+
+                                }
+                                catch (JSONException e) {
                                     throw new RuntimeException(e);
-                                 }
-                                 dealNewPlayerCard(val, suit);
-                                 updateScores();
-                                 */
-
-                                try {
-                                    Thread.sleep(500);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
                                 }
 
-                                /**
-                                 try {
-                                    val = dealerCards[0].getString("value"); // fix this
-                                    suit = dealerCards[0].getString("suit");
-                                 } catch (JSONException e) {
-                                    throw new RuntimeException(e);
-                                 }
-                                 dealNewDealerCard(val, suit);
-                                 updateScores();
-                                 */
-
-                                try {
-                                    Thread.sleep(500);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
+                                //See who's turn it is and change UI accordingly
+                                if (userName != turnPlayer) {
+                                    //in the future, we will replace the user's cards with the cards of whoever is currently going so they can watch.
+                                    hideButtonsForOtherTurn(turnPlayer);
                                 }
-
-                                /**
-                                 try {
-                                    val = myCards[1].getString("value"); // fix this
-                                    suit = myCards[1].getString("suit");
-                                 } catch (JSONException e) {
-                                    throw new RuntimeException(e);
-                                 }
-                                 dealNewPlayerCard(val, suit);
-                                 updateScores();
-                                 */
-
-                                try {
-                                    Thread.sleep(500);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-
-                                currentlyAnimating = false;
-                                runNextFunction();
-                            }).start();
-                        }
-                    });
-                    if (currentlyAnimating != true) {
-                        runNextFunction();
-                    }
-                }
-                else {
-                    Log.e(TAG, "No data sent in gameResults signal.");
-                }
-            }
-        });
-
-        //TODO MAKE SURE THIS ALIGNS WITH GUAN'S BACKEND
-        mSocket.on("dealerCards", new Emitter.Listener() {
-            @Override
-            //ChatGPT usage: partial - for things related to queueing requests.
-            public void call(Object... args) {
-                if (args[0] != null) {
-                    requestQueue.offer(new Runnable() {
-                        @Override
-                        //ChatGPT usage: No
-                        public void run() {
-                            new Thread(() -> {
-                                currentlyAnimating = true;
-
-                                JSONObject gameState = (JSONObject) args[0];
-                                Log.d(TAG, "BlackJack Init: " + gameState.toString());
-
-                                //TODO MAKE SURE THIS WORKS WITH GUAN'S BACKEND - WILL NEED CHANGES WHEN I KNOW MORE
-                                JSONArray dealerCards;
-                                try {
-                                    dealerCards = gameState.getJSONArray("DealerCards");
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                    return;
-                                }
-
-                                //TODO DEAL FILL IN SECOND DEALER CARD WITH DATA, ADD IN EACH REMAINING DEALER CARD
-                                String val;
-                                String suit;
-                                hideButtonsForOtherTurn("Dealer");
-
-                                /**
-                                 for (int i = dealerCardIdx; i < dealerCardVals.length; i++) {
-                                    try {
-                                        val = dealerCards[i].getString("value"); // fix this
-                                        suit = dealerCards[i].getString("suit");
-                                    } catch (JSONException e) {
-                                        break;
-                                    }
-                                    dealNewDealerCard(val, suit);
-                                    updateScores();
-
-                                    try {
-                                        Thread.sleep(500);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                 }
-                                 */
-
-                                //TODO: SHOW ANY NEW CARDS OF MINE (IF I HIT AND THIS IS THE NEXT TURN)
-                                JSONArray playerCards;
-                                JSONArray myCards;
-                                /**
-                                 try {
-                                    playerCards = gameState.getJSONArray("PlayerCards");
-                                    myCards = playerCards.getJSONArray(userName); //Fix this
-                                 } catch (Exception e) {
-                                    e.printStackTrace();
-                                    return;
-                                 }
-                                 */
-
-                                /**
-                                 for (int i = playerCardIdx; i < 21; i++) {
-                                    try {
-                                        val = myCards[i].getString("value"); // fix this
-                                        suit = myCards[i].getString("suit");
-                                    } catch (JSONException e) {
-                                        break;
-                                    }
-                                    dealNewPlayerCard(val, suit);
-                                    updateScores();
-
-                                    try {
-                                        Thread.sleep(500);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                 }
-                                 */
-
-                                //Sleep to let the user see results before the popup request starts.
-                                try {
-                                    Thread.sleep(1000);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                                currentlyAnimating = false;
-                                runNextFunction();
-                            }).start();
-                        }
-                    });
-                    if (currentlyAnimating != true) {
-                        runNextFunction();
-                    }
-                }
-                else {
-                    Log.e(TAG, "No data sent in gameResults signal.");
-                }
-            }
-        });
-
-
-        //TODO MAKE SURE THIS ALIGNS WITH GUAN'S BACKEND
-        mSocket.on("playTurn", new Emitter.Listener() {
-            @Override
-            //ChatGPT usage: partial - for things related to queueing requests.
-            public void call(Object... args) {
-                if (args[0] != null) {
-                    requestQueue.offer(new Runnable() {
-                        @Override
-                        //ChatGPT usage: No
-                        public void run() {
-                            new Thread(() -> {
-                                currentlyAnimating = true;
-
-                                JSONObject gameState = (JSONObject) args[0];
-                                Log.d(TAG, "BlackJack Init: " + gameState.toString());
-
-                                //TODO MAKE SURE THIS WORKS WITH GUAN'S BACKEND - WILL NEED CHANGES WHEN I KNOW MORE
-                                JSONArray players;
-                                int index;
-                                String playerInControl;
-
-                                try {
-                                    players = gameState.getJSONArray("players");
-                                    index = gameState.getInt("currentPlayerIndex");
-                                    playerInControl = players.getString(index);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                    return;
-                                }
-
-                                //TODO: IF NOT MY USERNAME, SHOW WHO'S TURN IT IS.
-                                if (userName != playerInControl) {
-                                    hideButtonsForOtherTurn(playerInControl);
-                                }
-
-                                //TODO: ELSE, SHOW BUTTONS FOR MY TURN
                                 else {
                                     showButtonsForPlayerTurn();
                                 }
 
-                                //TODO: SHOW ANY NEW CARDS OF MINE
-                                JSONArray playerCards;
-                                JSONArray myCards;
-                                /**
-                                 try {
-                                    playerCards = gameState.getJSONArray("PlayerCards");
-                                    myCards = playerCards.getJSONArray(userName); //Fix this
-                                 } catch (Exception e) {
-                                    e.printStackTrace();
-                                    return;
-                                 }
-                                 */
-
-                                /**
-                                 String val;
-                                 String suit;
-                                 for (int i = playerCardIdx; i < 21; i++) {
+                                //Set all user's cards in the game state that haven't been set yet
+                                for (int i = playerCardIdx; i < 21; i++) {
                                     try {
-                                        val = myCards[i].getString("value"); // fix this
-                                        suit = myCards[i].getString("suit");
+                                        card = playerHandJsonArray.getString(i);
                                     } catch (JSONException e) {
                                         break;
                                     }
-                                    dealNewPlayerCard(val, suit);
+                                    dealNewPlayerCard(card);
                                     updateScores();
 
                                     try {
@@ -430,8 +232,25 @@ public class BlackJackActivity extends AppCompatActivity {
                                     } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
-                                 }
-                                 */
+                                }
+
+
+                                //Set all dealer cards in the game state that haven't been set yet
+                                for (int i = dealerCardIdx; i < 21; i++) {
+                                    try {
+                                        card = dealerHandJsonArray.getString(1);
+                                    } catch (JSONException e) {
+                                        break;
+                                    }
+                                    dealNewDealerCard(card);
+                                    updateScores();
+
+                                    try {
+                                        Thread.sleep(500);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
 
                                 //Short sleep before letting next request start
                                 try {
@@ -450,32 +269,112 @@ public class BlackJackActivity extends AppCompatActivity {
                     }
                 }
                 else {
-                    Log.e(TAG, "No data sent in gameResults signal.");
+                    Log.e(TAG, "No data sent in play turn signal.");
                 }
             }
         });
 
-
-        //TODO MAKE SURE THIS ALIGNS WITH GUAN'S BACKEND
-        mSocket.on("gameEnded", new Emitter.Listener() {
+        mSocket.on("gameOver", new Emitter.Listener() {
             @Override
             //ChatGPT usage: Partial - for things related to to the popup window and queueing requests
             public void call(Object... args) {
                 if (args[0] != null) {
-                    JSONObject results = (JSONObject) args[0];
-                    Log.d(TAG, "Game Results: " + results.toString());
+                    JSONObject gameState = (JSONObject) args[0];
+                    Log.d(TAG, "Game Results: " + gameState.toString());
+
+                    requestQueue.offer(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            //Get Dealer and Player Cards, and Current Player
+                            JSONObject gameData = null;
+                            JSONObject gameItems = null;
+                            JSONObject globalItems = null;
+                            JSONObject playerItems = null;
+                            JSONObject currentUserData = null;
+                            JSONObject turnPlayerData = null;
+
+                            JSONArray playerHandJsonArray = null;
+                            JSONArray dealerHandJsonArray = null;
+                            JSONArray turnPlayerHandJsonArray = null; //This one is for future updates to the UI
+
+                            JSONArray playerList = null;
+                            int currentPlayerIndex = -1;
+                            String turnPlayer = "";
+
+                            String card;
+
+                            try {
+                                gameData = gameState.getJSONObject("gameData");
+                                gameItems = gameData.getJSONObject("gameItems");
+                                globalItems = gameItems.getJSONObject("globalItems");
+                                playerItems = gameItems.getJSONObject("playerItems");
+                                currentUserData = playerItems.getJSONObject(userName);
+                                playerHandJsonArray = currentUserData.getJSONArray("playerHand");
+                                dealerHandJsonArray = globalItems.getJSONArray("dealerHand");
+
+                            }
+                            catch (JSONException e) {
+                                throw new RuntimeException(e);
+                            }
+
+
+                            //Set all user's cards in the game state that haven't been set yet
+                            for (int i = playerCardIdx; i < 21; i++) {
+                                try {
+                                    card = playerHandJsonArray.getString(i);
+                                } catch (JSONException e) {
+                                    break;
+                                }
+                                dealNewPlayerCard(card);
+                                updateScores();
+
+                                try {
+                                    Thread.sleep(500);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            //Set all dealer cards in the game state that haven't been set yet
+                            for (int i = dealerCardIdx; i < 21; i++) {
+                                try {
+                                    card = dealerHandJsonArray.getString(1);
+                                } catch (JSONException e) {
+                                    break;
+                                }
+                                dealNewDealerCard(card);
+                                updateScores();
+
+                                try {
+                                    Thread.sleep(500);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            //Give some time to see results before bet winnings pops up
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            runNextFunction();
+                        }
+                    });
+                    runNextFunction();
+
                     requestQueue.offer(new Runnable() {
                         @Override
                         //ChatGPT usage: Partial - The call to showWinningsPopup
                         public void run() {
-                            //TODO: MAKE SURE THIS WORKS WITH GUAN'S BACKEND - WILL NEED CHANGES
                             double earnings = 0;
                             try {
-                                earnings = results.getDouble(userName);
+                                JSONObject gameResult = gameState.getJSONObject("gameResult");
+                                earnings = gameResult.getInt(userName);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-
 
                             //Send User to Results Popup
                             double finalEarnings = earnings;
@@ -497,7 +396,7 @@ public class BlackJackActivity extends AppCompatActivity {
                     }
                 }
                 else {
-                    Log.e(TAG, "No data sent in gameEnded signal.");
+                    Log.e(TAG, "No data sent in gameOver signal.");
                 }
             }
         });
@@ -586,7 +485,12 @@ public class BlackJackActivity extends AppCompatActivity {
     }
 
     //ChatGPT usage: No
-    private void dealNewDealerCard(String value, String suit) {
+    private void dealNewDealerCard(String card) {
+        String[] cardDetails = getCardDetails(card);
+
+        String value = cardDetails[0];
+        String suit = cardDetails[1];
+
         if (dealerCardIdx <= 5) {
             dealerCardItems[dealerCardIdx].setText(value+ "\n" + suit);
         } else {
@@ -597,7 +501,12 @@ public class BlackJackActivity extends AppCompatActivity {
     }
 
     //ChatGPT usage: No
-    private void dealNewPlayerCard(String value, String suit) {
+    private void dealNewPlayerCard(String card) {
+        String[] cardDetails = getCardDetails(card);
+
+        String value = cardDetails[0];
+        String suit = cardDetails[1];
+
         if (playerCardIdx <= 5) {
             playerCardItems[playerCardIdx].setText(value+ "\n" + suit);
         } else {
@@ -641,5 +550,46 @@ public class BlackJackActivity extends AppCompatActivity {
 
         dealerScoreLabel.setText(String.valueOf(dealerScore));
         playerScoreLabel.setText(String.valueOf(playerScore));
+    }
+
+    //ChatGPT usage: No
+    private String[] getCardDetails(String card) {
+        String val = "";
+        String valAbbrv = "";
+        String suitAbbrv = "";
+        String suit = "";
+
+        if (card.startsWith("10")) {
+            valAbbrv = "10";
+            suitAbbrv = String.valueOf(card.charAt(2));
+        } else {
+            valAbbrv = String.valueOf(card.charAt(0));
+            suitAbbrv = String.valueOf(card.charAt(1));
+        }
+
+        if (suitAbbrv == "H") {
+            suit = "Heart";
+        } else if (suitAbbrv == "D") {
+            suit = "Diamond";
+        } else if (suitAbbrv == "C") {
+            suit = "Club";
+        } else if (suitAbbrv == "S") {
+            suit = "Spade";
+        }
+
+        if (valAbbrv == "A") {
+            val = "Ace";
+        } else if (valAbbrv == "J") {
+            val = "Jack";
+        } else if (valAbbrv == "Q") {
+            val = "Queen";
+        } else if (valAbbrv == "K") {
+            val = "King";
+        } else {
+            val = valAbbrv;
+        }
+
+        String[] returnObj = {val, suit};
+        return returnObj;
     }
 }

@@ -63,8 +63,6 @@ playerAction structure:
     betsPlaced: betsPlaced (dictionary),            
     // dictionary of game objects, see above for structure
     gameItems: defaultGameObjects (dictionary),     
-    // list of "userActions", is the list of actions taken by players, 
-    actionHistory: [] (list)                        
 };
 */
 
@@ -98,12 +96,11 @@ class GameManager extends EventEmitter {
         if (this.timers[gameData.lobbyName]) {
             clearTimeout(this.timers[gameData.lobbyName]);
         }
-
-        let defaultAction = this._getDefaultAction(gameData);
  
         // Implement actual timeout
         this.timers[gameData.lobbyName] = setTimeout(() => {
-            this._timeoutTurn(gameData, defaultAction);
+            //Force them to stand
+            this.playTurn(gameData, gameData.playerList[gameData.currentPlayerIndex], "stand");;
         }, 15000); // 15 seconds
     }
 
@@ -112,16 +109,16 @@ class GameManager extends EventEmitter {
     *   @param {dictionary} playerAction
     *  @return {dictionary} gameData
     */
-    _getActionResult(gameData, playerAction) {
+    _getActionResult(gameData, username, action) {
         let gameType = gameData.gameType;
-        if (gameType == 'blackjack') {
-            gameData = Blackjack.playTurn(gameData, playerAction);
+        if (gameType == 'BlackJack') {
+            gameData = Blackjack.playTurn(gameData, username, action);
         }
-        else if (gameType == 'baccarat') {
-            gameData = Baccarat.playTurn(gameData, playerAction);
+        else if (gameType == 'Baccarat') {
+            gameData = Baccarat.playTurn(gameData);
         }
-        else if (gameType == 'roulette'){
-            gameData = Roulette.playTurn(gameData, playerAction);
+        else if (gameType == 'Roulette'){
+            gameData = Roulette.playTurn(gameData);
         }
         
         return gameData;
@@ -138,17 +135,18 @@ class GameManager extends EventEmitter {
             return 0;
         }
         let gameType = gameData.gameType;
-        if (gameType == 'blackjack') {
-            gameData = Blackjack.calculateWinning(gameData);
+        let gameResult = null;
+        if (gameType == 'Blackjack') {
+            gameResult = Blackjack.calculateWinning(gameData);
         }
-        else if (gameType == 'baccarat') {
-            gameData = Baccarat.calculateWinning(gameData);
+        else if (gameType == 'Baccarat') {
+            gameResult = Baccarat.calculateWinning(gameData);
         }
-        else if (gameType == 'roulette') {
-            gameData = Roulette.calculateWinning(gameData);
+        else if (gameType == 'Roulette') {
+            gameResult = Roulette.calculateWinning(gameData);
         }
         
-        return gameData;
+        return gameResult;
     }
 
     /* get the default action for the current player
@@ -158,11 +156,12 @@ class GameManager extends EventEmitter {
     *   @return {dictionary} defaultAction
     */
     _getDefaultAction(gameData) {
-        let defaultAction = [];
+        let defaultAction = {};
         for (let i = 0; i < gameData.playerList.length; i++) {
-            let userDefaultAction = {};
-            userDefaultAction[gameData.playerList[i].playerId] = [1];
-            defaultAction.push(userDefaultAction);
+            defaultAction[gameData.playerList[i]] = {
+                                                        'status':  0, 
+                                                        'action': "none",
+                                                    };
         }
         return defaultAction;
     }
@@ -179,7 +178,8 @@ class GameManager extends EventEmitter {
         // defaultItems = {eachUser: {}}
         let defaultItems = {};
         for (let i = 0; i < playerList.length; i++) {
-            defaultItems.playerList[i].playerId = {};
+            //defaultItems.playerList[i].playerId = {};
+            defaultItems[playerList[i]] = {};
         }
         // setup game object with default value
         let gameData = {
@@ -193,39 +193,22 @@ class GameManager extends EventEmitter {
                 globalItems: {}, 
                 playerItems: defaultItems
             },
-            actionHistory: []
         };
         // setup new game based on game type
-        if (gameType == "blackjack") {
+        if (gameType == "Blackjack") {
             gameData = Blackjack.newGame(gameData);
-        } else if (gameType == "baccarat") {
+        } else if (gameType == "Baccarat") {
             gameData = Baccarat.newGame(gameData);
-        } else if (gameType == "roulette") {
+        } else if (gameType == "Roulette") {
             gameData = Roulette.newGame(gameData);
         }
-        // complete game creation, will prepare the game settings, but no action will be performed
-        this.gameStore.newGame(gameData);
-        this._delay(1000);
-        this.io.to(gameData.lobbyId).emit('gameStarted', {});
         
-        let defaultAction = this._getDefaultAction(gameData);
-        // play first step of the game, often setup the game for first action
-        this._getActionResult(gameData, defaultAction);
+        // complete game creation, will prepare the game settings, but no action will be performed
+        await this.gameStore.newGame(gameData);
 
-        this.gameStore.updateGame(gameData);
-        this._resetTimer(gameData);
+        this.playTurn(gameData.lobbyId);
     }
 
-    /* handler in case a time out occurs
-    *   @param {dictionary} gameData
-    *   @param {dictionary} action
-    *   @emit {dictionary} gameData back to caller
-    *   @emit {dictionary} action back to caller
-    */
-    async _timeoutTurn(gameData, action) {
-        this.io.to(gameData.lobbyId).emit("timeout", {"playerAction": action});
-        this.playTurn(gameData, action);
-    }
 
     /* play a single turn in the game
     *   @param {dictionary} lobbyId
@@ -233,32 +216,42 @@ class GameManager extends EventEmitter {
     *  @emit {dictionary} gameData back to caller
     * @emit {dictionary} action back to caller
     */
-    async playTurn(lobbyId, action) {
+    async playTurn(lobbyId, username="none", action="none") {
         let gameData = await this.gameStore.getGame(lobbyId);
-        let gameResult = {};
-        // reset the timer, if one exists
-        this._resetTimer(gameData);
+        let gameResult = null;
+
         // get action
-        gameData = this._getActionResult(gameData, action);
+        gameData = this._getActionResult(gameData, username ,action);
+
         // update the game data in the database
         this.gameStore.updateGame(gameData);
+        
         // Notify all players whose turn it is
         if (this._checkGameOver(gameData)) {
-            console.log("rouletteTable: " + gameData.gameItems.globalItems.rouletteTable);
+
             gameResult = this._calculateWinning(gameData);
+            
             // game is over
             this.io.to(gameData.lobbyId).emit('gameOver', {
                 "gameData": gameData, 
-                "playerAction": action,
                 "gameResult": gameResult
             });
+            
+            if (this.timers[gameData.lobbyName]) {
+                clearTimeout(this.timers[gameData.lobbyName]);
+            }
+
+            await this.gameStore.deleteGame(gameData.lobbyId);
             
         } else {
             //game not over
             this.io.to(gameData.lobbyId).emit('playerTurn', {
                 "gameData": gameData, 
-                "playerAction": action
             });
+            // reset the timer, if one exists
+            if (gameData.gameType == "BlackJack") {
+                this._resetTimer(gameData);
+            }
         }
         
     }
@@ -275,12 +268,20 @@ class GameManager extends EventEmitter {
     _delay(duration) {
         return new Promise(resolve => setTimeout(resolve, duration));
     }
+
+
+    async connect() {
+        await this.gameStore.connect();
+    }
 }
 
 // Basic outline for GameStore:
 class GameStore {
     constructor() {
-        this.client = new MongoClient('mongodb://localhost:27017', { useNewUrlParser: true, useUnifiedTopology: true });
+        this.client = new MongoClient('mongodb://localhost:27017');
+    }
+
+    async connect() {
         this.client.connect().then(() => {
             this.db = this.client.db('casinoApp');
             this.games = this.db.collection('games');
@@ -311,6 +312,10 @@ class GameStore {
             { lobbyName: gameData.lobbyId }, 
             { $set: gameData }
         );
+    }
+
+    async deleteGame(lobbyName) {
+        return await this.games.deleteOne({ lobbyName: lobbyName });
     }
 }
 

@@ -14,6 +14,7 @@ const UserAccount = require('./UserAccount'); // Assuming you also export the Us
 const GameLobby = require('./GameLobby');
 const GameLobbyStore = require('./GameLobbyStore');
 const LiveChat = require('./LiveChat');
+const GameManager = require('./GameManager/GameManager');
 
 const MONGO_CONNECTION_STRING = 'mongodb://localhost:27017'; // Adjust to your MongoDB connection string
 const USERDB_NAME = 'UserDB'; // Name of the database
@@ -23,6 +24,7 @@ const userStore = new UserStore(MONGO_CONNECTION_STRING, USERDB_NAME);
 
 (async () => {
     await userStore.connect();
+    console.log('Connected to MongoDB userStore');
 })();
 
 const userAccount = new UserAccount(io, userStore);
@@ -32,6 +34,13 @@ const gameLobbies = {};
 
 (async () => {
     await gameLobbyStore.init();
+    console.log('Connected to MongoDB gameLobbyStore');
+})();
+
+const gameManager = new GameManager(io);
+(async () => {
+    await gameManager.connect();
+    console.log('Connected to MongoDB gameStore');
 })();
 
 io.on('connection', (socket) => {
@@ -136,6 +145,10 @@ io.on('connection', (socket) => {
             }
         }
     });
+
+    socket.on('playTurn', (lobbyName, username, action) => {
+        this.GameManager.playTurn(lobbyName, username, action);
+    })
 
     socket.on('disconnect', () => {
         console.log("User disconnected");
